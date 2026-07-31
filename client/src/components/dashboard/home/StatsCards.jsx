@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowDownRight,
@@ -14,6 +15,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { getAllMeetings } from "@/services/meetingService";
 
 const ICONS = {
   Video,
@@ -78,6 +80,39 @@ function StatCard({ label, value, trend, trendLabel, positive, icon }) {
 }
 
 export default function StatsCards() {
+  const [stats, setStats] = useState(STATS);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const meetings = await getAllMeetings();
+        const completed = meetings.filter(
+          (meeting) => meeting.summaryStatus === "Complete"
+        ).length;
+
+        setStats(
+          STATS.map((stat) => {
+            if (stat.label === "Total Meetings") {
+              return { ...stat, value: String(meetings.length) };
+            }
+            if (stat.label === "AI Summaries") {
+              return { ...stat, value: String(completed) };
+            }
+            return stat;
+          })
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadStats();
+
+    const refresh = () => loadStats();
+    window.addEventListener("echoai:meetings-updated", refresh);
+    return () => window.removeEventListener("echoai:meetings-updated", refresh);
+  }, []);
+
   return (
     <motion.section
       variants={container}
@@ -86,7 +121,7 @@ export default function StatsCards() {
       aria-label="Dashboard statistics"
       className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
     >
-      {STATS.map((stat) => (
+      {stats.map((stat) => (
         <StatCard key={stat.label} {...stat} />
       ))}
     </motion.section>

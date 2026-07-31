@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export default function MeetingsEmptyState({ className }) {
+export default function MeetingsEmptyState({ className, onCreated }) {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -50,6 +50,7 @@ export default function MeetingsEmptyState({ className }) {
         open={modalOpen}
         onOpenChange={setModalOpen}
         defaultTab="upload"
+        onSuccess={onCreated}
       />
     </motion.div>
   );

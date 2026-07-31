@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { AudioWaveform } from "lucide-react";
+import { toast } from "sonner";
 
 import LiveMeetingTab from "@/components/new-meeting/LiveMeetingTab";
 import RecordingUploadTab from "@/components/new-meeting/RecordingUploadTab";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { createMeeting } from "@/services/meetingService";
 
 /**
  * Reusable New Meeting modal.
@@ -24,25 +26,49 @@ import { cn } from "@/lib/utils";
  * @param {(open: boolean) => void} [onOpenChange]
  * @param {"live" | "upload"} [defaultTab]
  * @param {React.ReactNode} [trigger]
- * @param {(file: File) => void} [onUpload]
+ * @param {() => void | Promise<void>} [onSuccess] - Called after a successful create (e.g. refresh list)
  */
 export default function NewMeetingModal({
   open,
   onOpenChange,
   defaultTab = "upload",
   trigger,
-  onUpload,
+  onSuccess,
 }) {
   const [tab, setTab] = useState(defaultTab);
+  const [submitting, setSubmitting] = useState(false);
   const isControlled = open !== undefined;
 
   useEffect(() => {
     if (open) setTab(defaultTab);
   }, [open, defaultTab]);
 
-  const handleUpload = (file) => {
-    onUpload?.(file);
-    onOpenChange?.(false);
+  const handleUpload = async (file) => {
+    if (submitting || !file) return;
+
+    const title = file.name.replace(/\.[^.]+$/, "") || "New Meeting";
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("recording", file);
+
+    try {
+      setSubmitting(true);
+      await createMeeting(formData);
+
+      onOpenChange?.(false);
+      toast.success("Meeting created successfully", {
+        description: `"${title}" has been added to your workspace.`,
+      });
+      window.dispatchEvent(new CustomEvent("echoai:meetings-updated"));
+      await onSuccess?.();
+    } catch (error) {
+      toast.error("Failed to create meeting", {
+        description: error.message || "Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -113,7 +139,11 @@ export default function NewMeetingModal({
             <AnimatePresence mode="wait">
               {tab === "live" ? <LiveMeetingTab key="live" /> : null}
               {tab === "upload" ? (
-                <RecordingUploadTab key="upload" onUpload={handleUpload} />
+                <RecordingUploadTab
+                  key="upload"
+                  onUpload={handleUpload}
+                  submitting={submitting}
+                />
               ) : null}
             </AnimatePresence>
           </div>

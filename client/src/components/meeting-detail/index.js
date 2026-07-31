@@ -11,4 +11,3 @@ export { default as AttachmentsCard } from "./AttachmentsCard";
 export { default as ActivityTimeline } from "./ActivityTimeline";
 export { default as DetailSectionCard } from "./DetailSectionCard";
 export { default as MetricBar } from "./MetricBar";
-export { getMeetingDetail } from "./data";

@@ -25,9 +25,15 @@ const STATUS_STYLES = {
 };
 
 const PRIORITY_STYLES = {
+  high: "bg-rose-500/10 text-rose-300 ring-rose-500/15",
   High: "bg-rose-500/10 text-rose-300 ring-rose-500/15",
+  medium: "bg-amber-500/10 text-amber-300 ring-amber-500/15",
   Medium: "bg-amber-500/10 text-amber-300 ring-amber-500/15",
+  low: "bg-zinc-500/10 text-zinc-400 ring-zinc-500/15",
   Low: "bg-zinc-500/10 text-zinc-400 ring-zinc-500/15",
+  critical: "bg-rose-500/15 text-rose-200 ring-rose-500/25",
+  Critical: "bg-rose-500/15 text-rose-200 ring-rose-500/25",
+  "Not set": "bg-zinc-500/10 text-zinc-500 ring-zinc-500/10",
 };
 
 const SCORE_TONES = {
@@ -56,6 +62,20 @@ function getScoreTone(score) {
   return SCORE_TONES.low;
 }
 
+function formatPriorityLabel(priority) {
+  if (priority == null || priority === "") return "Not set";
+
+  const key = String(priority).toLowerCase();
+  const labels = {
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+    critical: "Critical",
+  };
+
+  return labels[key] ?? String(priority);
+}
+
 export function StatusPill({ status, className }) {
   return (
     <span
@@ -71,15 +91,19 @@ export function StatusPill({ status, className }) {
 }
 
 export function PriorityBadge({ priority, className }) {
+  const label = formatPriorityLabel(priority);
+  const styleKey =
+    priority == null || priority === "" ? "Not set" : priority;
+
   return (
     <span
       className={cn(
         "inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium tracking-tight ring-1 ring-inset",
-        PRIORITY_STYLES[priority] ?? PRIORITY_STYLES.Low,
+        PRIORITY_STYLES[styleKey] ?? PRIORITY_STYLES["Not set"],
         className
       )}
     >
-      {priority}
+      {label}
     </span>
   );
 }

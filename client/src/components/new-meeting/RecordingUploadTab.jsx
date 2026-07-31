@@ -49,7 +49,7 @@ function FileTypeIcon({ fileName }) {
   return <Icon className="size-4 text-[#3B82F6]" strokeWidth={1.75} />;
 }
 
-export default function RecordingUploadTab({ onUpload }) {
+export default function RecordingUploadTab({ onUpload, submitting = false }) {
   const inputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
@@ -82,7 +82,7 @@ export default function RecordingUploadTab({ onUpload }) {
   };
 
   const handleUpload = () => {
-    if (!file) return;
+    if (!file || submitting) return;
     onUpload?.(file);
   };
 
@@ -207,17 +207,17 @@ export default function RecordingUploadTab({ onUpload }) {
 
       <Button
         type="button"
-        disabled={!file}
+        disabled={!file || submitting}
         onClick={handleUpload}
         className={cn(
           "h-10 w-full gap-2 rounded-xl border-0 text-sm font-medium",
-          file
+          file && !submitting
             ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] hover:text-white"
             : "bg-[#1A1A1D] text-[#52525B]"
         )}
       >
         <Upload className="size-4" />
-        Upload & Analyze
+        {submitting ? "Uploading…" : "Upload & Analyze"}
       </Button>
     </motion.div>
   );

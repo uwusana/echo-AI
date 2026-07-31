@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Upload } from "lucide-react";
@@ -8,17 +8,44 @@ import {
   MeetingMobileCard,
   meetingColumns,
 } from "@/components/data-table";
-import { MEETINGS } from "@/components/dashboard/home/data";
 import MeetingsEmptyState from "@/components/dashboard/MeetingsEmptyState";
 import { NewMeetingModal } from "@/components/new-meeting";
 import { Button } from "@/components/ui/button";
 import { usePagination } from "@/hooks/usePagination";
+import { getAllMeetings } from "@/services/meetingService";
 
 const MEETINGS_PER_PAGE = 5;
 
 export default function MeetingsPage() {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
+  const [meetings, setMeetings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadMeetings = useCallback(async () => {
+    try {
+      setError("");
+      const data = await getAllMeetings();
+      setMeetings(data);
+    } catch (err) {
+      setError(err.message || "Failed to load meetings");
+      setMeetings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMeetings();
+  }, [loadMeetings]);
+
+  useEffect(() => {
+    const refresh = () => loadMeetings();
+    window.addEventListener("echoai:meetings-updated", refresh);
+    return () => window.removeEventListener("echoai:meetings-updated", refresh);
+  }, [loadMeetings]);
+
   const {
     paginatedItems,
     currentPage,
@@ -27,12 +54,12 @@ export default function MeetingsPage() {
     itemsPerPage,
     setPage,
   } = usePagination({
-    items: MEETINGS,
+    items: meetings,
     itemsPerPage: MEETINGS_PER_PAGE,
   });
 
-  if (MEETINGS.length === 0) {
-    return <MeetingsEmptyState />;
+  if (!loading && meetings.length === 0 && !error) {
+    return <MeetingsEmptyState onCreated={loadMeetings} />;
   }
 
   return (
@@ -61,6 +88,10 @@ export default function MeetingsPage() {
         </Button>
       </div>
 
+      {error ? (
+        <p className="text-sm text-rose-400">{error}</p>
+      ) : null}
+
       <DataTable
         title="All Meetings"
         description={`${totalItems} meetings in your workspace`}
@@ -84,6 +115,7 @@ export default function MeetingsPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         defaultTab="upload"
+        onSuccess={loadMeetings}
       />
     </motion.div>
   );
