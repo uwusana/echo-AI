@@ -54,7 +54,11 @@ export default function MeetingMobileCard({ meeting, variant = "full" }) {
             <PriorityBadge priority={meeting.priority} />
             <AiScore score={meeting.aiScore} />
           </div>
-          <AvatarStack people={meeting.participants} />
+          {meeting.participants?.length > 0 ? (
+            <AvatarStack people={meeting.participants} />
+          ) : (
+            <p className="text-xs text-[#71717A]">Not available</p>
+          )}
         </>
       )}
     </div>

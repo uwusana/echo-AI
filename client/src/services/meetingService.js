@@ -17,8 +17,29 @@ function formatDate(value) {
 }
 
 function formatDuration(minutes) {
-  const mins = Number(minutes) || 0;
-  return `${mins} min`;
+  if (
+    minutes == null ||
+    minutes === "" ||
+    !Number.isFinite(Number(minutes)) ||
+    Number(minutes) <= 0
+  ) {
+    return "Processing...";
+  }
+  const mins = Number(minutes);
+  return Number.isInteger(mins) ? `${mins} min` : `${mins.toFixed(1)} min`;
+}
+
+function formatLanguage(value) {
+  if (value == null) return "Detecting...";
+  if (typeof value === "string" && !value.trim()) return "Detecting...";
+  return value;
+}
+
+function formatParticipantsLabel(participants = []) {
+  if (!Array.isArray(participants) || participants.length === 0) {
+    return "Not available";
+  }
+  return `${participants.length} participants`;
 }
 
 function formatBytes(bytes = 0) {
@@ -45,6 +66,7 @@ export function mapMeetingListItem(meeting) {
     duration: formatDuration(meeting.duration),
     summaryStatus: STATUS_MAP[meeting.status] ?? "Pending",
     participants: meeting.participants ?? [],
+    participantsLabel: formatParticipantsLabel(meeting.participants),
     priority: meeting.priority ?? null,
     aiScore: meeting.productivityScore ?? meeting.aiConfidence ?? 0,
     status: meeting.status,
@@ -63,10 +85,17 @@ export function mapMeetingDetail(meeting) {
 
   return {
     ...listFields,
-    language: meeting.language || "English",
+    language: formatLanguage(meeting.language),
+    languageConfidence:
+      meeting.languageConfidence == null
+        ? null
+        : Number(meeting.languageConfidence),
     recordingSize: formatBytes(meeting.fileSize),
     processingTime: "—",
-    createdBy: meeting.participants?.[0] || "Unknown",
+    createdBy:
+      meeting.participants?.length > 0
+        ? meeting.participants[0]
+        : "Not available",
     tags: meeting.tags?.length ? meeting.tags : ["Meeting"],
     summary: {
       executive:

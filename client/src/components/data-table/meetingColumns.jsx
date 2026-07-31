@@ -31,7 +31,12 @@ export const meetingColumns = [
     id: "participants",
     header: "Participants",
     hideBelow: "md",
-    cell: (row) => <AvatarStack people={row.participants} />,
+    cell: (row) =>
+      row.participants?.length > 0 ? (
+        <AvatarStack people={row.participants} />
+      ) : (
+        <TextCell>Not available</TextCell>
+      ),
   },
   {
     id: "priority",
@@ -75,7 +80,12 @@ export const recentMeetingColumns = [
     id: "participants",
     header: "Participants",
     hideBelow: "lg",
-    cell: (row) => <AvatarStack people={row.participants} max={2} />,
+    cell: (row) =>
+      row.participants?.length > 0 ? (
+        <AvatarStack people={row.participants} max={2} />
+      ) : (
+        <TextCell>Not available</TextCell>
+      ),
   },
   {
     id: "summaryStatus",

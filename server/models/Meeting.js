@@ -62,7 +62,7 @@ const meetingSchema = new mongoose.Schema(
     // Meeting Details
     duration: {
       type: Number,
-      default: 0,
+      default: null,
       min: [0, "Duration cannot be negative"],
     },
     participants: {
@@ -71,8 +71,14 @@ const meetingSchema = new mongoose.Schema(
     },
     language: {
       type: String,
-      default: "English",
+      default: null,
       trim: true,
+    },
+    languageConfidence: {
+      type: Number,
+      default: null,
+      min: [0, "Language confidence must be between 0 and 100"],
+      max: [100, "Language confidence must be between 0 and 100"],
     },
     priority: {
       type: String,

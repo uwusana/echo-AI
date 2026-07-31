@@ -1,5 +1,7 @@
 const Meeting = require("../models/Meeting");
 const path = require("path");
+const { extractMediaMetadata } = require("../services/mediaMetadata");
+const { processMeeting } = require("../services/meetingProcessor");
 
 /**
  * GET /meetings
@@ -78,20 +80,28 @@ const createMeeting = async (req, res) => {
     const storedFileName = req.file.filename;
     const fileType = req.file.mimetype;
     const fileSize = req.file.size;
+    const absolutePath = req.file.path;
 
     const titleFromBody = req.body?.title?.trim();
     const titleFromFile = path.parse(originalFileName).name;
     const title = titleFromBody || titleFromFile || "Untitled Meeting";
 
+    const metadata = await extractMediaMetadata({
+      filePath: absolutePath,
+      mimeType: fileType,
+      fileSize,
+    });
+
     const meeting = await Meeting.create({
       title,
       originalFileName,
       storedFileName,
-      fileType,
-      fileSize,
-      duration: 0,
+      fileType: metadata.mimeType || fileType,
+      fileSize: metadata.fileSize ?? fileSize,
+      duration: metadata.duration,
       participants: [],
-      language: "English",
+      language: null,
+      languageConfidence: null,
       status: "uploaded",
       priority: null,
       transcript: "",
@@ -102,6 +112,16 @@ const createMeeting = async (req, res) => {
       sentiment: "",
       productivityScore: null,
       aiConfidence: null,
+    });
+
+    // Kick off AI processing without blocking the upload response.
+    setImmediate(() => {
+      processMeeting(meeting._id).catch((error) => {
+        console.error(
+          `[createMeeting] Unhandled processMeeting error for ${meeting._id}:`,
+          error.message
+        );
+      });
     });
 
     return res.status(201).json({

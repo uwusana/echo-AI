@@ -93,7 +93,13 @@ export default function MeetingInfoCard({ meeting }) {
             Participants
           </dt>
           <dd className="text-right">
-            <AvatarStack people={meeting.participants} max={3} />
+            {meeting.participants?.length > 0 ? (
+              <AvatarStack people={meeting.participants} max={3} />
+            ) : (
+              <span className="text-[13px] font-medium tracking-tight text-[#71717A]">
+                Not available
+              </span>
+            )}
           </dd>
         </div>
 

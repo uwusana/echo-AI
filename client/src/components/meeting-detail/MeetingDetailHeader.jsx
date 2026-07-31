@@ -72,10 +72,17 @@ export default function MeetingDetailHeader({ meeting }) {
               {meeting.duration}
             </span>
             <span className="inline-flex items-center gap-2">
-              <AvatarStack people={meeting.participants} max={4} />
-              <span className="text-xs text-[#71717A]">
-                {meeting.participants.length} participants
-              </span>
+              {meeting.participants?.length > 0 ? (
+                <>
+                  <AvatarStack people={meeting.participants} max={4} />
+                  <span className="text-xs text-[#71717A]">
+                    {meeting.participantsLabel ||
+                      `${meeting.participants.length} participants`}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-[#71717A]">Not available</span>
+              )}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#3B82F6]/10 px-2.5 py-1 text-xs font-medium text-[#60A5FA] ring-1 ring-inset ring-[#3B82F6]/15">
               <Sparkles className="size-3" />
